@@ -10,7 +10,7 @@
 
 #include "CustomerDefine.h"
 
-#define CUSTORMER I2C_ANALOG
+#define CUSTORMER FSMC_LCD
 
 
 #endif /* CUSTOMERSETTING_H_ */

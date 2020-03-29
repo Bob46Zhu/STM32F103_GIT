@@ -320,7 +320,7 @@ _write(int file __attribute__((unused)), char* ptr __attribute__((unused)),
 
 #include <_ansi.h>
 #include <stdint.h>
-//#include <sys/types.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 #include <stdio.h>
@@ -571,6 +571,9 @@ newslot (void);
 register char* stack_ptr asm ("sp");
 
 /* following is copied from libc/stdio/local.h to check std streams */
+#ifndef _EXFUN
+#define _EXFUN(N,P) N P
+#endif
 extern void _EXFUN(__sinit,(struct _reent*));
 #define CHECK_INIT(ptr) \
   do                                            \

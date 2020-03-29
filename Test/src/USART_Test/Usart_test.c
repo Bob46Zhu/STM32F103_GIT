@@ -130,6 +130,18 @@ void Usart_SendHalfWord(USART_TypeDef *pUSART,uint16_t ch)
 	while(USART_GetFlagStatus(pUSART,USART_FLAG_TXE) == RESET);
 }
 
+//重定向C库函数printf到串口，重定向后可以使用printf函数
+int fputc(int ch, FILE *f)
+{
+		/* 发送一个字节数据到串口 */
+		USART_SendData(DEBUG_USARTx, (uint8_t) ch);
+
+		/* 等待发送完毕 */
+		while (USART_GetFlagStatus(DEBUG_USARTx, USART_FLAG_TXE) == RESET);
+
+		return (ch);
+}
+
 //重定向C库函数 scanf到串口，重定向后可使用scanf,getchar等函数
 int fgetc(FILE *f)
 {

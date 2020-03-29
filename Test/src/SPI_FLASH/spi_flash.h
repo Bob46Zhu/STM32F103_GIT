@@ -85,9 +85,8 @@
 #define FLASH_INFO(fmt,arg...)           printf("<<-FLASH-INFO->> "fmt"\n",##arg)
 #define FLASH_ERROR(fmt,arg...)          printf("<<-FLASH-ERROR->> "fmt"\n",##arg)
 #define FLASH_DEBUG(fmt,arg...)          do{\
-                                          if(FLASH_DEBUG_ON)\
-                                          printf("<<-FLASH-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
-                                          }while(0)
+                                          if(FLASH_DEBUG_ON)\                                         printf("<<-FLASH-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
+                                          }while(0);
 
 void SPI_FLASH_Init(void);
 void SPI_FLASH_SectorErase(u32 SectorAddr);

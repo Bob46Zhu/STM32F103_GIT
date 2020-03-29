@@ -75,7 +75,7 @@ void SPI_FLASH_SectorErase(u32 SectorAddr)
 	SPI_FLASH_CS_LOW();
 
 	//发送扇区擦除指令
-	SPI_FALSH_SendByte(W25X_SectorErase);
+	SPI_FLASH_SendByte(W25X_SectorErase);
 	//发送擦除扇区地址的高位
 	SPI_FLASH_SendByte((SectorAddr & 0xFF0000) >> 16);
 	//发送擦除扇区地址的中位
@@ -345,7 +345,7 @@ void SPI_FLASH_StartReadSequence(u32 ReadAddr)
 /**
  * 使用SPI读取一个字节的数据
  * */
-u8 SPI_FLASH_ReadByte(viod)
+u8 SPI_FLASH_ReadByte(void)
 {
 	return (SPI_FLASH_SendByte(Dummy_Byte));
 }
@@ -434,7 +434,7 @@ void SPI_FLASH_WriteEnable(void)
 /*
  * 等待WIP(BUSY)标志被置0，即等待到FLASH内部数据写入完毕
  * */
-void SPI_FLASH_WaitForWriteEnd(viod)
+void SPI_FLASH_WaitForWriteEnd(void)
 {
 	u8 FLASH_Status = 0;
 	//选择FLASH ：CS 低电平

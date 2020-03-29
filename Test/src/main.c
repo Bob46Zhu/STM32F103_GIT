@@ -11,7 +11,7 @@
 #include "stm32f10x.h"
 #include "Timer.h"
 #include "BlinkLed.h"
-#include "sys.h"
+//#include "../sys/sys.h"
 #include "HSE_RccConfig/HSE_RccConfig.h"
 #include "LED_RGB_TEST/led_rgb_test.h"
 #include "CustomerSetting.h"
@@ -24,6 +24,10 @@
 #include "DMA_M2M/DMA_M2M.h"
 #include "I2C_ANALOG/i2c_gpio.h"
 #include "I2C_ANALOG/i2c_analog.h"
+#include "SPI_FLASH/spi_flash.h"
+#include "FSMC_LCD/bsp_ili9341_lcd.h"
+
+
 // ----------------------------------------------------------------------------
 //
 // Standalone STM32F1 led blink sample (trace via DEBUG).
@@ -75,6 +79,36 @@ extern uint8_t SendBuff[SENDBUFF_SIZE];
 #if CUSTORMER == DMA_M2M_TEST
 extern const uint32_t aSRC_Const_Buffer[BUFFER_SIZE];
 extern uint32_t aDST_Buffer[BUFFER_SIZE];
+#endif
+
+#if CUSTORMER == SPI_FLASH
+typedef enum {FAILED =0, PASSED = !FAILED} TestStatus;
+
+//获取缓冲区的长度
+#define TxBufferSize1	(countof(TxBuffer1) - 1)
+#define RxBufferSize1	(countof(RxBuffer1) - 1)
+#define countof(a)		(sizeof(a) / sizeof(*(a)))
+#define BufferSize	(countof(Tx_Buffer) - 1)
+
+#define FLASH_WriteAddress		0x00000
+#define FLASH_ReadAddress		FLASH_WriteAddress
+#define FLASH_SectorToErase		FLASH_WriteAddress
+
+//发送缓冲区初始化
+uint8_t Tx_Buffer[]	 = "感谢您选用野火stm32开发板\r\n";
+uint8_t Rx_Buffer[BufferSize];
+
+__IO uint32_t DeviceID = 0;
+__IO uint32_t FlashID = 0;
+__IO TestStatus TransferStaus1 = FAILED;
+
+
+#endif
+
+#if CUSTORMER == FSMC_LCD
+static void LCD_Test(void);
+//static void Delay(__IO uint32_t nCount);
+void printf_Charater(void);
 #endif
 
 int main(int argc, char* argv[])
@@ -254,18 +288,20 @@ int main(int argc, char* argv[])
 				break;
 			default:
 				//如果不是指定指令字符，打印提示信息
-				Usart_SendString(DEBUG_USARTx,"这是一个通过串口通信指令控制RGB彩灯实验\n");
-				Usart_SendString(DEBUG_USARTx,"使用 USART 参数为：115200 8-N -1 \n");
-				Usart_SendString(DEBUG_USARTx,"开发板接到指令后控制RGB彩灯颜色，指令对应如下：\n");
-				Usart_SendString(DEBUG_USARTx,"指令 ------ 彩灯颜色 \n");
-				Usart_SendString(DEBUG_USARTx,"  1  ------    红 \n");
-				Usart_SendString(DEBUG_USARTx,"  2  ------    绿 \n");
-				Usart_SendString(DEBUG_USARTx,"  3  ------    蓝 \n");
-				Usart_SendString(DEBUG_USARTx,"  4  ------    黄 \n");
-				Usart_SendString(DEBUG_USARTx,"  5  ------    紫 \n");
-				Usart_SendString(DEBUG_USARTx,"  6  ------    青 \n");
-				Usart_SendString(DEBUG_USARTx,"  7  ------    白 \n");
-				Usart_SendString(DEBUG_USARTx,"  8  ------    灭 \n");
+//				Usart_SendString(DEBUG_USARTx,"这是一个通过串口通信指令控制RGB彩灯实验\n");
+//				Usart_SendString(DEBUG_USARTx,"使用 USART 参数为：115200 8-N -1 \n");
+//				Usart_SendString(DEBUG_USARTx,"开发板接到指令后控制RGB彩灯颜色，指令对应如下：\n");
+//				Usart_SendString(DEBUG_USARTx,"指令 ------ 彩灯颜色 \n");
+//				Usart_SendString(DEBUG_USARTx,"  1  ------    红 \n");
+//				Usart_SendString(DEBUG_USARTx,"  2  ------    绿 \n");
+//				Usart_SendString(DEBUG_USARTx,"  3  ------    蓝 \n");
+//				Usart_SendString(DEBUG_USARTx,"  4  ------    黄 \n");
+//				Usart_SendString(DEBUG_USARTx,"  5  ------    紫 \n");
+//				Usart_SendString(DEBUG_USARTx,"  6  ------    青 \n");
+//				Usart_SendString(DEBUG_USARTx,"  7  ------    白 \n");
+//				Usart_SendString(DEBUG_USARTx,"  8  ------    灭 \n");
+
+				printf("hello\r\n");
 				break;
 			}
 		}
@@ -372,7 +408,165 @@ int main(int argc, char* argv[])
 
 #endif
 
+#if CUSTORMER == SPI_FLASH
+	LED_GPIO_Config();
+	LED_BLUE;
+
+	//配置串口为：115200 8-N-1
+	USART_Config();
+
+	//8M串行flash W25Q64初始化
+	SPI_FLASH_Init();
+
+	//获取flash Device ID
+	DeviceID = SPI_FLASH_ReadDeviceID();
+	Delay(200);
+
+	//获取SPI Flash ID
+	FlashID = SPI_FLASH_ReadID();
+
+	Usart_SendString(DEBUG_USARTx,"读取到FLASH_ID:");
+	Usart_SendHalfWord(DEBUG_USARTx,(FlashID&0xFFFF0000)>16);
+	Usart_SendHalfWord(DEBUG_USARTx,(FlashID&0x0000FFFF));
+	Usart_SendString(DEBUG_USARTx,"\n");
+	Usart_SendString(DEBUG_USARTx,"读取到FLASH_Device_ID:");
+	Usart_SendHalfWord(DEBUG_USARTx,(DeviceID&0xFFFF0000)>16);
+	Usart_SendHalfWord(DEBUG_USARTx,(DeviceID&0x0000FFFF));
+	Usart_SendString(DEBUG_USARTx,"\n");
+
+	//检验SPI Flash ID
+	if(FlashID == sFLASH_ID)
+	{
+
+	}
+
+#endif
+
+#if CUSTORMER == FSMC_LCD
+	ILI9341_Init();	//LCD初始化
+	USART_Config();
+	printf("\r\n*************** 液晶屏英文显示程序 ****************\r\n");
+	printf("\r\n 本程序不支持中文，显示中文的程序请学习下一章 \r\n");
+
+	//其中0、3、5、6模式适合从左至右显示文字
+	//不推荐使用其他模式显示文字，其它模式显示文字会有镜像效果
+	//其中6模式为大部分液晶例程的默认显示方向
+	ILI9341_GramScan(6);
+	while(1)
+	{
+		LCD_Test();
+	}
+
+#endif
+
 }
+
+#if CUSTORMER == FSMC_LCD
+//用于测试各种液晶的函数
+void LCD_Test(void)
+{
+	//演示显示变量
+	static uint8_t testCNT = 0;
+	char dispBuff[100];
+
+	testCNT++;
+
+	LCD_SetFont(&Font8x16);
+	LCD_SetColors(RED,BLACK);
+
+	ILI9341_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);//清屏，显示全黑
+	/* 显示字符串示例 */
+	ILI9341_DispStringLine_EN(LINE(0),"BH 3.2 inch LCD para:");
+	ILI9341_DispStringLine_EN(LINE(1),"Image resolution:240x320 px");
+	ILI9341_DispStringLine_EN(LINE(2),"ILI9341 LCD Driver");
+	ILI9341_DispStringLine_EN(LINE(3),"XPT2046 Touch Pad Driver");
+
+	/* 显示变量示例 */
+	LCD_SetFont(&Font16x24);
+	LCD_SetTextColor(GREEN);
+
+	//使用C标准库把变量转化成字符串
+	sprintf(dispBuff,"Count:%d",testCNT);
+	LCD_ClearLine(LINE(4));//清除单行文字
+
+	//然后显示该字符串即可，其他变量也是这样处理
+	ILI9341_DispStringLine_EN(LINE(4),dispBuff);
+
+	//显示图形示例
+	LCD_SetFont(&Font24x32);
+
+	//画直线
+	LCD_ClearLine(LINE(4));//清除单行文字
+	LCD_SetTextColor(BLUE);
+
+	ILI9341_DispStringLine_EN(LINE(4),"Draw Line");
+
+	LCD_SetTextColor(RED);
+	ILI9341_DrawLine(50,170,210,230);
+	ILI9341_DrawLine(50,200,210,240);
+
+	LCD_SetTextColor(GREEN);
+	ILI9341_DrawLine(100,170,200,230);
+	ILI9341_DrawLine(200,200,220,240);
+
+	LCD_SetTextColor(BLUE);
+	ILI9341_DrawLine(110,170,110,230);
+	ILI9341_DrawLine(130,200,220,240);
+
+	Delay(0xFFFFFF);
+
+	ILI9341_Clear(0,16*8,LCD_X_LENGTH,LCD_Y_LENGTH-16*8); //清屏，显示全黑
+
+	//画矩形
+	LCD_ClearLine(LINE(4)); //清除单行文字
+	LCD_SetTextColor(BLUE);
+
+	ILI9341_DispStringLine_EN(LINE(4),"Draw Rect:");
+
+	LCD_SetTextColor(RED);
+	ILI9341_DrawRectangle(50,200,100,30,1);
+
+	LCD_SetTextColor(GREEN);
+	ILI9341_DrawRectangle(160,200,20,40,0);
+
+	LCD_SetTextColor(BLUE);
+	ILI9341_DrawRectangle(170,200,50,20,1);
+
+	Delay(0xFFFFFF);
+
+	ILI9341_Clear(0,16*8,LCD_X_LENGTH,LCD_Y_LENGTH-16*8); //清屏，显示全黑
+
+	//画圆
+	LCD_ClearLine(LINE(4)); //清除单行文字
+	LCD_SetTextColor(BLUE);
+
+	ILI9341_DispStringLine_EN(LINE(4),"Draw Cir:");
+
+	LCD_SetTextColor(RED);
+	ILI9341_DrawCircle(100,200,20,0);
+
+	LCD_SetTextColor(GREEN);
+	ILI9341_DrawCircle(100,200,10,1);
+
+	LCD_SetTextColor(BLUE);
+	ILI9341_DrawCircle(140,200,20,0);
+
+	Delay(0xFFFFFF);
+
+	ILI9341_Clear(0,16*8,LCD_X_LENGTH,LCD_Y_LENGTH-16*8); //清屏，显示全黑
+
+}
+
+/*
+ * 简单延时函数
+ * nCount：延时计数值
+ * */
+//static void Delay(__IO uint32_t nCount)
+//{
+//	for(;nCount != 0;nCount--);
+//}
+
+#endif
 
 
 #pragma GCC diagnostic pop
