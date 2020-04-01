@@ -10,7 +10,7 @@
 
 #include "CustomerDefine.h"
 
-#define CUSTORMER FSMC_LCD
+#define CUSTORMER LED_RGB_TEST
 
 
 #endif /* CUSTOMERSETTING_H_ */
