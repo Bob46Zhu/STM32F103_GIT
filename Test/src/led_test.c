@@ -17,22 +17,5 @@
 //
 //	while (1)
 //	{
-//		  PBout(1) = 0;
-//		  timer_sleep(500);
-//		  PBout(0) = 1;
-//		  PBout(1) = 1;
-//		  PBout(5) = 1;
-//		  timer_sleep(500);
-//		  PBout(0) = 0;
-//		  timer_sleep(500);
-//		  PBout(0) = 1;
-//		  PBout(1) = 1;
-//		  PBout(5) = 1;
-//		  timer_sleep(500);
-//		  PBout(5) = 0;
-//		  timer_sleep(500);
-//		  PBout(0) = 1;
-//		  PBout(1) = 1;
-//		  PBout(5) = 1;
-//		  timer_sleep(500);
+
 //	}

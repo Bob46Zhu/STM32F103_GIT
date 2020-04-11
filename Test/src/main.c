@@ -17,7 +17,7 @@
 #include "SysTick_test/SysTick_test.h"
 #include "USART_Test/Usart_test.h"
 #include "USART_DMA/Usart_Dma.h"
-
+#include "LED_Line.h"
 
 
 // ----------------------------------------------------------------------------
@@ -67,18 +67,48 @@
 
 int main(int argc, char* argv[])
 {
-	timer_start();
+	//timer_start();
 	//HSE_SetSysClk(RCC_CFGR_PLLMULL16);
-#if CUSTORMER == LED_RGB_TEST
-	LED_GPIO_Config();
+//	RGB_LED_Init();
+//	RGB_LED_Reset();
+//	while(1)
+//	{
+//		RGB_LED_Blue();
+//		SysTick_Delay_Us(100000);
+//		RGB_LED_Red();
+//		SysTick_Delay_Us(100000);
+//		RGB_LED_Green();
+//		SysTick_Delay_Us(100000);
+//	}
+
+/*****************************************************
+ * 			SPI + DMA 库函数版本
+ * ****************************************/
+	int i = 0;
+	unsigned int PixColorDa = 0;
+	uint8_t Red,Green,Blue;
+
+	RGB_LED_Init();
 	while(1)
 	{
-	  LED_Corlor_test();
+//		Set_Flow_Pixel(0xFF,0x00,0x00);
+//		DMA2_Start_SPI_Tx();
+		for(i=0;i<3;i++)
+		{
+			PixColorDa = (0xFF<<(8*i));	//逐次点亮RGB
+
+			Blue = (PixColorDa >> 16)&0xFF;
+			Green = (PixColorDa >> 8)&0xFF;
+			Red = (PixColorDa)&0xFF;
+
+			Set_All_Pixel_Color(Red,Green,Blue);	//设置灯带所有灯的 颜色为红色
+			DMA2_Start_SPI_Tx();	//发送数据
+//			sleep(1);	//睡眠1秒，自己实现此函数
+			SysTick_Delay_Ms(1000);
+		}
 	}
-#endif
 
-
-
+}
 #pragma GCC diagnostic pop
 
 // ----------------------------------------------------------------------------
