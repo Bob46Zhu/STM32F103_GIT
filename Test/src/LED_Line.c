@@ -6,6 +6,7 @@
  */
 #include "LED_Line.h"
 
+
 static void delay_led_line(uint8_t time)
 {
 	while(time>0)
@@ -183,6 +184,11 @@ void Ws281x_Set_Pixel(uint32_t color,uint32_t position)
 	Ws281x_Set_Bits(Green,positionin);
 	Ws281x_Set_Bits(Red,positionin + 1);
 	Ws281x_Set_Bits(Blue,positionin + 2);
+}
+
+void Ws281x_UpData(void)
+{
+
 }
 
 void Ws281x_Set_Bits(uint8_t bits,uint32_t position)
